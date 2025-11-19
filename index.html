@@ -901,94 +901,74 @@
       const s = date.getUTCSeconds().toString().padStart(2, "0");
       return `${y}${m}${d}T${h}${min}${s}Z`;
     }
+    
+function exportToCalendar() {
+  const data = loadData();
+  const todayKey = ensureToday(data);
+  const today = data[todayKey];
 
-    function exportToCalendar() {
-      const data = loadData();
-      const todayKey = ensureToday(data);
-      const today = data[todayKey];
+  const [year, month, day] = todayKey.split("-").map((x) => parseInt(x, 10));
+  const date = new Date(Date.UTC(year, month - 1, day));
+  const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
 
-      const [year, month, day] = todayKey.split("-").map((x) => parseInt(x, 10));
-      const date = new Date(Date.UTC(year, month - 1, day));
-      const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+  const dateStr = `${year.toString().padStart(4, "0")}${month
+    .toString()
+    .padStart(2, "0")}${day.toString().padStart(2, "0")}`;
 
-      const dateStr = `${year.toString().padStart(4, "0")}${month
-        .toString()
-        .padStart(2, "0")}${day.toString().padStart(2, "0")}`;
+  const nextYear = nextDate.getUTCFullYear();
+  const nextMonth = nextDate.getUTCMonth() + 1;
+  const nextDay = nextDate.getUTCDate();
+  const nextDateStr = `${nextYear.toString().padStart(4, "0")}${nextMonth
+    .toString()
+    .padStart(2, "0")}${nextDay.toString().padStart(2, "0")}`;
 
-      const nextYear = nextDate.getUTCFullYear();
-      const nextMonth = nextDate.getUTCMonth() + 1;
-      const nextDay = nextDate.getUTCDate();
-      const nextDateStr = `${nextYear.toString().padStart(4, "0")}${nextMonth
-        .toString()
-        .padStart(2, "0")}${nextDay.toString().padStart(2, "0")}`;
+  const summary = `Pompes ${today.pompes} – Tractions ${today.tractions} – Abdos ${today.abdos}`;
 
-      const summary = `Pompes ${today.pompes} – Tractions ${today.tractions} – Abdos ${today.abdos}`;
+  let description = `Session du ${getTodayLabel()}\n`;
+  description += `Total pompes: ${today.pompes}\n`;
+  description += `Total tractions: ${today.tractions}\n`;
+  description += `Total abdos: ${today.abdos}\n\n`;
+  description += "Détail des actions :\n";
 
-      let description = `Session du ${getTodayLabel()}\\n`;
-      description += `Total pompes: ${today.pompes}\\n`;
-      description += `Total tractions: ${today.tractions}\\n`;
-      description += `Total abdos: ${today.abdos}\\n\\n`;
-      description += "Détail des actions :\\n";
+  if (today.log && today.log.length > 0) {
+    today.log.forEach((entry) => {
+      const labelType =
+        entry.type === "pompes"
+          ? "pompes"
+          : entry.type === "tractions"
+          ? "tractions"
+          : entry.type === "abdos"
+          ? "abdos"
+          : "jour";
 
-      if (today.log && today.log.length > 0) {
-        today.log.forEach((entry) => {
-          const labelType =
-            entry.type === "pompes"
-              ? "pompes"
-              : entry.type === "tractions"
-              ? "tractions"
-              : entry.type === "abdos"
-              ? "abdos"
-              : "jour";
+      const deltaStr =
+        entry.delta > 0
+          ? `+${entry.delta}`
+          : entry.delta < 0
+          ? `${entry.delta}`
+          : entry.reset || entry.resetDay
+          ? "reset"
+          : "0";
 
-          const deltaStr =
-            entry.delta > 0
-              ? `+${entry.delta}`
-              : entry.delta < 0
-              ? `${entry.delta}`
-              : entry.reset || entry.resetDay
-              ? "reset"
-              : "0";
+      description += `${entry.timeLabel || ""} - ${labelType} ${deltaStr} (total ${entry.value})\n`;
+    });
+  } else {
+    description += "Aucune action enregistrée.\n";
+  }
 
-          description += `${entry.timeLabel || ""} - ${labelType} ${deltaStr} (total ${entry.value})\\n`;
-        });
-      } else {
-        description += "Aucune action enregistrée.\\n";
-      }
+  const startStr = dateStr;
+  const endStr = nextDateStr;
 
-      const dtstamp = formatDateTimeUTC(new Date());
-      const uid = `pushpull-${todayKey}-${Date.now()}@pushpull.local`;
+  const gcalUrl =
+    "https://calendar.google.com/calendar/render" +
+    "?action=TEMPLATE" +
+    "&text=" + encodeURIComponent(summary) +
+    "&dates=" + encodeURIComponent(startStr + "/" + endStr) +
+    "&details=" + encodeURIComponent(description);
 
-      const icsContent = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "PRODID:-//PushPull Counter//FR",
-        "CALSCALE:GREGORIAN",
-        "METHOD:PUBLISH",
-        "BEGIN:VEVENT",
-        `UID:${uid}`,
-        `DTSTAMP:${dtstamp}`,
-        `DTSTART;VALUE=DATE:${dateStr}`,
-        `DTEND;VALUE=DATE:${nextDateStr}`,
-        `SUMMARY:${escapeICSText(summary)}`,
-        `DESCRIPTION:${escapeICSText(description)}`,
-        "END:VEVENT",
-        "END:VCALENDAR",
-      ].join("\r\n");
+  window.open(gcalUrl, "_blank");
+}
 
-      const blob = new Blob([icsContent], {
-        type: "text/calendar;charset=utf-8",
-      });
-
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `sport_${todayKey}.ics`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    }
 
     /* ---------- Notifications intelligentes ---------- */
 
