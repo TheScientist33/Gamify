@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Compteur Pompes, Tractions & Abdos</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.6rem;
+      text-align: center;
+    }
+
+    .date {
+      text-align: center;
+      font-size: 0.9rem;
+      color: #9ca3af;
+    }
+
+    .streak-banner {
+      text-align: center;
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #111827;
+      color: #e5e7eb;
+      margin: 0 auto;
+      max-width: 320px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+    }
+
+    .streak-strong {
+      color: #4ade80;
+      font-weight: 600;
+    }
+
+    .notify-wrapper {
+      text-align:center;
+      margin-top:8px;
+      font-size:0.85rem;
+      color:#e5e7eb;
+    }
+
+    .perfday-banner {
+      margin: 10px auto 0;
+      max-width: 380px;
+      border-radius: 16px;
+      padding: 10px 14px;
+      background: radial-gradient(circle at top left, #22c55e33, #111827 60%);
+      border: 1px solid #16a34a55;
+      box-shadow: 0 8px 18px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 0.9rem;
+    }
+
+    .perfday-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+
+    .perfday-title {
+      font-weight:600;
+      font-size:0.9rem;
+    }
+
+    .perfday-percent {
+      font-weight:700;
+      font-size:1rem;
+      padding: 2px 8px;
+      border-radius:999px;
+      background:#16a34a;
+      color:#ecfdf5;
+    }
+
+    .perfday-message {
+      font-size:0.85rem;
+      color:#e5e7eb;
+    }
+
+    .top-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      margin-top: 8px;
+    }
+
+    .top-tabs button {
+      flex: 1;
+      border-radius: 999px;
+      border: none;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: #1f2937;
+      color: #e5e7eb;
+      transition: background 0.1s ease, transform 0.05s ease;
+    }
+
+    .top-tabs button.active {
+      background: #3b82f6;
+      color: #dbeafe;
+      font-weight: 600;
+    }
+
+    .top-tabs button:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+
+    @media (min-width: 750px) {
+      .cards {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .card {
+      background: #111827;
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+    }
+
+    .card-subtitle {
+      font-size: 0.85rem;
+      color: #9ca3af;
+    }
+
+    .circle-wrapper {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+
+    .circle {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      padding: 10px;
+      background: #1f2937;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease;
+    }
+
+    .circle-inner {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #020617;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.7);
+    }
+
+    .circle-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .buttons-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      background: #1f2937;
+      color: #f9fafb;
+      transition: transform 0.05s ease, box-shadow 0.1s ease, background 0.1s ease;
+    }
+
+    button:active {
+      transform: translateY(1px) scale(0.98);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3) inset;
+    }
+
+    .btn-plus {
+      flex: 1;
+      background: #22c55e;
+      color: #022c22;
+      font-weight: 600;
+    }
+
+    .btn-minus {
+      flex: 1;
+      background: #ef4444;
+      color: #fee2e2;
+    }
+
+    .btn-reset {
+      flex: 1;
+      background: #4b5563;
+    }
+
+    .btn-primary {
+      background: #3b82f6;
+      color: #dbeafe;
+      font-weight: 600;
+    }
+
+    .footer {
+      margin-top: auto;
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .actions-day {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .actions-day button {
+      width: 100%;
+      max-width: 280px;
+    }
+
+    /* CALENDRIER */
+
+    .calendar-container {
+      background: #020617;
+      border-radius: 16px;
+      padding: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .calendar-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .calendar-nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .calendar-nav button {
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      border-radius: 999px;
+      background: #111827;
+    }
+
+    .calendar-modes {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .calendar-modes button {
+      flex: 1;
+      min-width: 64px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      background: #111827;
+    }
+
+    .calendar-modes button.active {
+      background: #3b82f6;
+      color: #dbeafe;
+      font-weight: 600;
+    }
+
+    .calendar-grid {
+      display: grid;
+      gap: 4px;
+      font-size: 0.75rem;
+    }
+
+    .calendar-grid.month {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .calendar-grid.week {
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .calendar-grid-year {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+
+    .calendar-cell {
+      min-height: 44px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      padding: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: transform 0.05s ease, box-shadow 0.1s ease;
+    }
+
+    .calendar-cell:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+
+    .calendar-cell-label {
+      font-size: 0.7rem;
+      opacity: 0.85;
+    }
+
+    .calendar-score {
+      font-size: 0.7rem;
+      font-weight: 600;
+      align-self: flex-end;
+    }
+
+    .dow-header {
+      font-size: 0.7rem;
+      text-align: center;
+      color: #9ca3af;
+      padding: 2px 0;
+    }
+
+    /* Codes couleur perf */
+    .perf-white {
+      background: #020617;
+      border-color: #1f2937;
+      color: #e5e7eb;
+    }
+
+    .perf-yellow {
+      background: #facc15;
+      border-color: #facc15;
+      color: #1f2937;
+    }
+
+    .perf-orange {
+      background: #fb923c;
+      border-color: #ea580c;
+      color: #111827;
+    }
+
+    .perf-green {
+      background: #22c55e;
+      border-color: #16a34a;
+      color: #052e16;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+    }
+
+    .legend-white {
+      background: #020617;
+    }
+
+    .legend-yellow {
+      background: #facc15;
+    }
+
+    .legend-orange {
+      background: #fb923c;
+    }
+
+    .legend-green {
+      background: #22c55e;
+    }
+
+    .calendar-day-detail {
+      font-size: 0.85rem;
+      color: #e5e7eb;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .calendar-day-detail strong {
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gamify</h1>
+  <div class="date" id="date-label"></div>
+  <div class="streak-banner" id="streak-banner">
+    Streak : <span class="streak-strong">0 jour</span> 
+  </div>
+
+  <div class="notify-wrapper">
+    <label style="cursor:pointer;">
+      <input type="checkbox" id="notify-toggle" style="margin-right:4px;">
+      Activer les rappels intelligents
+    </label>
+  </div>
+
+  <div class="perfday-banner" id="perfday-banner">
+    <div class="perfday-header">
+      <span class="perfday-title">Perf du jour</span>
+      <span class="perfday-percent" id="perfday-percent">0 %</span>
+    </div>
+    <div class="perfday-message" id="perfday-message">
+      La journée n'a pas commencé. 5 pompes pour lancer la machine ?
+    </div>
+  </div>
+
+  <div class="top-tabs">
+    <button id="tab-today" class="active" onclick="setMainView('today')">Compteur</button>
+    <button id="tab-calendar" onclick="setMainView('calendar')">Calendrier</button>
+  </div>
+
+  <!-- Vue compteur du jour -->
+  <div id="view-today">
+    <div class="cards">
+      <!-- Pompes -->
+      <div class="card">
+        <div class="card-title">
+          <span>Pompes</span>
+          <span class="card-subtitle">Objectif 100</span>
+        </div>
+        <div class="circle-wrapper">
+          <div class="circle" id="pompes-circle">
+            <div class="circle-inner">
+              <div class="circle-value" id="pompes-count">0 / 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-minus" onclick="changeCounter('pompes', -1)">-1</button>
+          <button class="btn-plus" onclick="changeCounter('pompes', 1)">+1</button>
+          <button class="btn-plus" onclick="changeCounter('pompes', 5)">+5</button>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-reset" onclick="resetCounter('pompes')">Reset pompes</button>
+        </div>
+      </div>
+
+      <!-- Tractions -->
+      <div class="card">
+        <div class="card-title">
+          <span>Tractions</span>
+          <span class="card-subtitle">Objectif 100</span>
+        </div>
+        <div class="circle-wrapper">
+          <div class="circle" id="tractions-circle">
+            <div class="circle-inner">
+              <div class="circle-value" id="tractions-count">0 / 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-minus" onclick="changeCounter('tractions', -1)">-1</button>
+          <button class="btn-plus" onclick="changeCounter('tractions', 1)">+1</button>
+          <button class="btn-plus" onclick="changeCounter('tractions', 5)">+5</button>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-reset" onclick="resetCounter('tractions')">Reset tractions</button>
+        </div>
+      </div>
+
+      <!-- Abdos -->
+      <div class="card">
+        <div class="card-title">
+          <span>Abdos</span>
+          <span class="card-subtitle">Objectif 100</span>
+        </div>
+        <div class="circle-wrapper">
+          <div class="circle" id="abdos-circle">
+            <div class="circle-inner">
+              <div class="circle-value" id="abdos-count">0 / 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-minus" onclick="changeCounter('abdos', -1)">-1</button>
+          <button class="btn-plus" onclick="changeCounter('abdos', 1)">+1</button>
+          <button class="btn-plus" onclick="changeCounter('abdos', 5)">+5</button>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-reset" onclick="resetCounter('abdos')">Reset abdos</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-day">
+      <button class="btn-reset" onclick="resetToday()">Reset de la journée</button>
+      <button class="btn-primary" onclick="exportToCalendar()">Ajouter au calendrier</button>
+    </div>
+  </div>
+
+  <!-- Vue calendrier -->
+  <div id="view-calendar" class="hidden">
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <div class="calendar-title" id="calendar-title">Calendrier</div>
+        <div class="calendar-nav">
+          <button onclick="shiftCalendar(-1)">&lt;</button>
+          <button onclick="shiftCalendar(1)">&gt;</button>
+        </div>
+      </div>
+
+      <div class="calendar-modes">
+        <button id="mode-day" class="active" onclick="setCalendarMode('day')">Jour</button>
+        <button id="mode-week" onclick="setCalendarMode('week')">Semaine</button>
+        <button id="mode-month" onclick="setCalendarMode('month')">Mois</button>
+        <button id="mode-year" onclick="setCalendarMode('year')">Année</button>
+      </div>
+
+      <div id="calendar-content"></div>
+
+      <div class="legend">
+        <span>Légende :</span>
+        <span class="legend-item">
+          <span class="legend-color legend-white"></span> 0 %
+        </span>
+        <span class="legend-item">
+          <span class="legend-color legend-yellow"></span> 1–49 %
+        </span>
+        <span class="legend-item">
+          <span class="legend-color legend-orange"></span> 50–89 %
+        </span>
+        <span class="legend-item">
+          <span class="legend-color legend-green"></span> ≥ 90 %
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Les données sont stockées uniquement sur ton appareil (localStorage).
+  </div>
+
+  <script>
+    const STORAGE_KEY = "push_pull_counters";
+    const DAILY_TARGET = 100;
+    const NOTIFY_KEY = "push_pull_notify";
+
+    let mainView = "today";
+    let calendarMode = "day";
+    let calendarRefDate = new Date();
+    let audioCtx = null;
+    let notifyTimer = null;
+
+    function getTodayKey() {
+      const now = new Date();
+      return now.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    }
+
+    function getTodayLabel(dateOverride) {
+      const d = dateOverride || new Date();
+      return d.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return {};
+        return JSON.parse(raw);
+      } catch (e) {
+        console.error("Erreur de parsing localStorage", e);
+        return {};
+      }
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function ensureToday(data) {
+      const key = getTodayKey();
+      if (!data[key]) {
+        data[key] = { pompes: 0, tractions: 0, abdos: 0, log: [] };
+      } else {
+        if (data[key].pompes == null) data[key].pompes = 0;
+        if (data[key].tractions == null) data[key].tractions = 0;
+        if (data[key].abdos == null) data[key].abdos = 0;
+        if (!Array.isArray(data[key].log)) data[key].log = [];
+      }
+      return key;
+    }
+
+    function updateCircle(type, value) {
+      const val = value || 0;
+      const el = document.getElementById(type + "-count");
+      const circle = document.getElementById(type + "-circle");
+      if (!el || !circle) return;
+
+      el.textContent = `${val} / ${DAILY_TARGET}`;
+      const clamped = Math.max(0, Math.min(DAILY_TARGET, val));
+      const percent = clamped / DAILY_TARGET;
+      const deg = percent * 360;
+
+      circle.style.background = `conic-gradient(#22c55e ${deg}deg, #1f2937 0deg)`;
+    }
+
+    function updateStreakBanner() {
+      const banner = document.getElementById("streak-banner");
+      const streak = computeStreak();
+      const label = streak <= 1 ? "jour" : "jours";
+      banner.innerHTML = `Streak actuel : <span class="streak-strong">${streak} ${label}</span> consécutif en vert`;
+    }
+
+    function updatePerfDayBanner() {
+      const percentEl = document.getElementById("perfday-percent");
+      const msgEl = document.getElementById("perfday-message");
+      const todayKey = getTodayKey();
+      const stats = getStatsForDate(todayKey);
+
+      let p = 0;
+      if (stats) {
+        p = Math.round(stats.avgPercent * 100);
+      }
+      percentEl.textContent = p + " %";
+
+      let message = "";
+
+      if (!stats || (stats.pompes === 0 && stats.tractions === 0 && stats.abdos === 0)) {
+        message = "La journée n'a pas commencé. 5 pompes pour lancer la machine ?";
+      } else if (p < 30) {
+        message = "Tu as posé un pied, mais tu es encore dans la zone tranquille. Un petit bloc 10 pompes / 5 tractions ?";
+      } else if (p < 60) {
+        message = "Bien joué, le moteur est allumé. Pousse un cran de plus pour sortir du jaune.";
+      } else if (p < 90) {
+        message = "Tu es dans l’orange : tu as déjà fait le plus dur. Encore une ou deux séries et tu passes au vert.";
+      } else if (p < 120) {
+        message = "Objectif du jour quasiment validé. Finis ton 100/100/100 et consolide ton streak.";
+      } else {
+        message = "Tu es au-dessus des 100 %. Mode surperformance. Garde ce niveau, ça devient ta nouvelle base.";
+      }
+
+      msgEl.textContent = message;
+    }
+
+    function updateDisplay() {
+      const data = loadData();
+      const todayKey = ensureToday(data);
+      const today = data[todayKey];
+
+      updateCircle("pompes", today.pompes);
+      updateCircle("tractions", today.tractions);
+      updateCircle("abdos", today.abdos);
+
+      document.getElementById("date-label").textContent = getTodayLabel();
+      updateStreakBanner();
+      updatePerfDayBanner();
+      renderCalendar();
+    }
+
+    function logAction(today, type, appliedDelta, newValue, options = {}) {
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      today.log.push({
+        time: now.toISOString(),
+        timeLabel,
+        type,
+        delta: appliedDelta,
+        value: newValue,
+        ...options,
+      });
+    }
+
+    function playGoalSound() {
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext();
+        }
+        const duration = 0.25;
+        const oscillator = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        oscillator.connect(gain);
+        gain.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.log("Erreur audio", e);
+      }
+    }
+
+    function changeCounter(type, delta) {
+      const data = loadData();
+      const todayKey = ensureToday(data);
+      const today = data[todayKey];
+
+      const oldValue = today[type] || 0;
+      const rawNew = oldValue + delta;
+      const newValue = Math.max(0, rawNew);
+      const appliedDelta = newValue - oldValue;
+
+      today[type] = newValue;
+      logAction(today, type, appliedDelta, newValue);
+
+      if (oldValue < DAILY_TARGET && newValue >= DAILY_TARGET) {
+        playGoalSound();
+      }
+
+      saveData(data);
+      updateDisplay();
+    }
+
+    function resetCounter(type) {
+      const data = loadData();
+      const todayKey = ensureToday(data);
+      const today = data[todayKey];
+
+      today[type] = 0;
+      logAction(today, type, 0, 0, { reset: true });
+
+      saveData(data);
+      updateDisplay();
+    }
+
+    function resetToday() {
+      const data = loadData();
+      const todayKey = ensureToday(data);
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      data[todayKey] = {
+        pompes: 0,
+        tractions: 0,
+        abdos: 0,
+        log: [
+          {
+            time: now.toISOString(),
+            timeLabel,
+            type: "day",
+            delta: 0,
+            value: 0,
+            resetDay: true,
+          },
+        ],
+      };
+
+      saveData(data);
+      updateDisplay();
+    }
+
+    /* ---------- ICS / Calendrier externe ---------- */
+
+
+    function updateCircle(type, value) {
+      const val = value || 0;
+      const el = document.getElementById(type + "-count");
+      const circle = document.getElementById(type + "-circle");
+      if (!el || !circle) return;
+
+      el.textContent = `${val} / ${DAILY_TARGET}`;
+      const clamped = Math.max(0, Math.min(DAILY_TARGET, val));
+      const percent = clamped / DAILY_TARGET;
+      const deg = percent * 360;
+
+      circle.style.background = `conic-gradient(#22c55e ${deg}deg, #1f2937 0deg)`;
+    }
+
+    function updateStreakBanner() {
+      const banner = document.getElementById("streak-banner");
+      const streak = computeStreak();
+      const label = streak <= 1 ? "jour" : "jours";
+      banner.innerHTML = `Streak actuel : <span class="streak-strong">${streak} ${label}</span> consécutif en vert`;
+    }
+
+    function updatePerfDayBanner() {
+      const percentEl = document.getElementById("perfday-percent");
+      const msgEl = document.getElementById("perfday-message");
+      const todayKey = getTodayKey();
+      const stats = getStatsForDate(todayKey);
+
+      let p = 0;
+      if (stats) {
+        p = Math.round(stats.avgPercent * 100);
+      }
+      percentEl.textContent = p + " %";
+
+      let message = "";
+
+      if (!stats || (stats.pompes === 0 && stats.tractions === 0 && stats.abdos === 0)) {
+        message = "La journée n'a pas commencé. 5 pompes pour lancer la machine ?";
+      } else if (p < 30) {
+        message = "Tu as posé un pied, mais tu es encore dans la zone tranquille. Un petit bloc 10 pompes / 5 tractions ?";
+      } else if (p < 60) {
+        message = "Bien joué, le moteur est allumé. Pousse un cran de plus pour sortir du jaune.";
+      } else if (p < 90) {
+        message = "Tu es dans l’orange : tu as déjà fait le plus dur. Encore une ou deux séries et tu passes au vert.";
+      } else if (p < 120) {
+        message = "Objectif du jour quasiment validé. Finis ton 100/100/100 et consolide ton streak.";
+      } else {
+        message = "Tu es au-dessus des 100 %. Mode surperformance. Garde ce niveau, ça devient ta nouvelle base.";
+      }
+
+      msgEl.textContent = message;
+    }
+
+    function updateDisplay() {
+      const data = loadData();
+      const todayKey = ensureToday(data);
+      const today = data[todayKey];
+
+      updateCircle("pompes", today.pompes);
+      updateCircle("tractions", today.tractions);
+      updateCircle("abdos", today.abdos);
+
+      document.getElementById("date-label").textContent = getTodayLabel();
+      updateStreakBanner();
+      updatePerfDayBanner();
+      renderCalendar();
+    }
+
+    function logAction(today, type, appliedDelta, newValue, options = {}) {
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      today.log.push({
+        time: now.toISOString(),
+        timeLabel,
+        type,
+        delta: appliedDelta,
+        value: newValue,
+        ...options,
+      });
+    }
+
+    function playGoalSound() {
+      try {
+        if (!audioCtx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AudioContext();
+        }
+        const duration = 0.25;
+        const oscillator = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        oscillator.connect(gain);
+        gain.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.log("Erreur audio", e);
+      }
+    }
+
+    function changeCounter(type, delta) {
+      const data = loadData();
+      const todayKey = ensureToday(data);
+      const today = data[todayKey];
+
+      const oldValue = today[type] || 0;
+      const rawNew = oldValue + delta;
+      const newValue = Math.max(0, rawNew);
+      const appliedDelta = newValue - oldValue;
+
+      today[type] = newValue;
+      logAction(today, type, appliedDelta, newValue);
+
+      if (oldValue < DAILY_TARGET && newValue >= DAILY_TARGET) {
+        playGoalSound();
+      }
+
+      saveData(data);
+      updateDisplay();
+    }
+
+    function resetCounter(type) {
+      const data = loadData();
+function escapeICSText(text) {
+      return text
+        .replace(/\\/g, "\\\\")
+        .replace(/;/g, "\\;")
+        .replace(/,/g, "\\,")
+        .replace(/\r?\n/g, "\\n");
+    }
+
+    function formatDateTimeUTC(date) {
+      const y = date.getUTCFullYear().toString().padStart(4, "0");
+      const m = (date.getUTCMonth() + 1).toString().padStart(2, "0");
+      const d = date.getUTCDate().toString().padStart(2, "0");
+      const h = date.getUTCHours().toString().padStart(2, "0");
+      const min = date.getUTCMinutes().toString().padStart(2, "0");
+      const s = date.getUTCSeconds().toString().padStart(2, "0");
+      return `${y}${m}${d}T${h}${min}${s}Z`;
+    }
+
+    function exportToCalendar() {
+      const data = loadData();
+      const todayKey = ensureToday(data);
+      const today = data[todayKey];
+
+      const [year, month, day] = todayKey.split("-").map((x) => parseInt(x, 10));
+      const date = new Date(Date.UTC(year, month - 1, day));
+      const nextDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+
+      const dateStr = `${year.toString().padStart(4, "0")}${month
+        .toString()
+        .padStart(2, "0")}${day.toString().padStart(2, "0")}`;
+
+      const nextYear = nextDate.getUTCFullYear();
+      const nextMonth = nextDate.getUTCMonth() + 1;
+      const nextDay = nextDate.getUTCDate();
+      const nextDateStr = `${nextYear.toString().padStart(4, "0")}${nextMonth
+        .toString()
+        .padStart(2, "0")}${nextDay.toString().padStart(2, "0")}`;
+
+      const summary = `Pompes ${today.pompes} – Tractions ${today.tractions} – Abdos ${today.abdos}`;
+
+      let description = `Session du ${getTodayLabel()}\\n`;
+      description += `Total pompes: ${today.pompes}\\n`;
+      description += `Total tractions: ${today.tractions}\\n`;
+      description += `Total abdos: ${today.abdos}\\n\\n`;
+      description += "Détail des actions :\\n";
+
+      if (today.log && today.log.length > 0) {
+        today.log.forEach((entry) => {
+          const labelType =
+            entry.type === "pompes"
+              ? "pompes"
+              : entry.type === "tractions"
+              ? "tractions"
+              : entry.type === "abdos"
+              ? "abdos"
+              : "jour";
+
+          const deltaStr =
+            entry.delta > 0
+              ? `+${entry.delta}`
+              : entry.delta < 0
+              ? `${entry.delta}`
+              : entry.reset || entry.resetDay
+              ? "reset"
+              : "0";
+
+          description += `${entry.timeLabel || ""} - ${labelType} ${deltaStr} (total ${entry.value})\\n`;
+        });
+      } else {
+        description += "Aucune action enregistrée.\\n";
+      }
+
+      const dtstamp = formatDateTimeUTC(new Date());
+      const uid = `pushpull-${todayKey}-${Date.now()}@pushpull.local`;
+
+      const icsContent = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//PushPull Counter//FR",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        "BEGIN:VEVENT",
+        `UID:${uid}`,
+        `DTSTAMP:${dtstamp}`,
+        `DTSTART;VALUE=DATE:${dateStr}`,
+        `DTEND;VALUE=DATE:${nextDateStr}`,
+        `SUMMARY:${escapeICSText(summary)}`,
+        `DESCRIPTION:${escapeICSText(description)}`,
+        "END:VEVENT",
+        "END:VCALENDAR",
+      ].join("\r\n");
+
+      const blob = new Blob([icsContent], {
+        type: "text/calendar;charset=utf-8",
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `sport_${todayKey}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    /* ---------- Notifications intelligentes ---------- */
+function loadNotifySettings() {
+      try {
+        const raw = localStorage.getItem(NOTIFY_KEY);
+        if (!raw) {
+          return {
+            enabled: false,
+            lastNotification: null,
+            countByDay: {}
+          };
+        }
+        const obj = JSON.parse(raw);
+        if (!obj.countByDay) obj.countByDay = {};
+        return obj;
+      } catch (e) {
+        console.error("Erreur notify settings", e);
+        return {
+          enabled: false,
+          lastNotification: null,
+          countByDay: {}
+        };
+      }
+    }
+
+    function saveNotifySettings(settings) {
+      localStorage.setItem(NOTIFY_KEY, JSON.stringify(settings));
+    }
+
+    function getLastActionTime(dateKey) {
+      const data = loadData();
+      const entry = data[dateKey];
+      if (!entry || !entry.log || entry.log.length === 0) return null;
+
+      for (let i = entry.log.length - 1; i >= 0; i--) {
+        const evt = entry.log[i];
+        if (evt.type === "pompes" || evt.type === "tractions" || evt.type === "abdos") {
+          return new Date(evt.time);
+        }
+      }
+      return null;
+    }
+
+    function startNotifyLoop() {
+      if (notifyTimer) clearInterval(notifyTimer);
+      notifyTimer = setInterval(runSmartReminder, 60 * 1000);
+    }
+
+    function stopNotifyLoop() {
+      if (notifyTimer) {
+        clearInterval(notifyTimer);
+        notifyTimer = null;
+      }
+    }
+
+    function runSmartReminder() {
+      if (!("Notification" in window)) return;
+      if (Notification.permission !== "granted") return;
+
+      const settings = loadNotifySettings();
+      if (!settings.enabled) return;
+
+      const now = new Date();
+      const hour = now.getHours();
+      if (hour < 8 || hour >= 22) return;
+
+      const todayKey = getTodayKey();
+      const stats = getStatsForDate(todayKey);
+      if (!stats) return;
+
+      if (stats.avgPercent >= 0.9) return;
+
+      const lastAction = getLastActionTime(todayKey);
+      if (!lastAction) return;
+
+      const minutesSinceAction = (now - lastAction) / 60000;
+
+      const countToday = settings.countByDay[todayKey] || 0;
+      if (countToday >= 8) return;
+
+      const lastNotif = settings.lastNotification ? new Date(settings.lastNotification) : null;
+      const minutesSinceNotif = lastNotif ? (now - lastNotif) / 60000 : Infinity;
+
+      let needed = false;
+      let message = "";
+
+      if (stats.avgPercent < 0.3 && minutesSinceAction >= 30 && minutesSinceNotif >= 30) {
+        needed = true;
+        message = "Tu n'as presque rien fait aujourd'hui. 2 minutes de pompes pour lancer la machine ?";
+      } else if (stats.avgPercent < 0.6 && minutesSinceAction >= 60 && minutesSinceNotif >= 45) {
+        needed = true;
+        message = "Tu as commencé, mais tu peux faire mieux. Un petit bloc pompes/tractions/abdos ?";
+      } else if (stats.avgPercent < 0.9 && minutesSinceAction >= 90 && minutesSinceNotif >= 60) {
+        needed = true;
+        message = "Tu es proche de l'objectif. Finis tes 100/100/100 et on n'en parle plus.";
+      }
+
+      if (!needed) return;
+
+      try {
+        new Notification("Rappel sport", {
+          body: message,
+          tag: "push-pull-reminder"
+        });
+      } catch (e) {
+        console.log("Erreur Notification", e);
+        return;
+      }
+
+      settings.lastNotification = now.toISOString();
+      settings.countByDay[todayKey] = countToday + 1;
+      saveNotifySettings(settings);
+    }
+
+    function initNotifyToggle() {
+      const checkbox = document.getElementById("notify-toggle");
+      if (!checkbox) return;
+
+      const settings = loadNotifySettings();
+      checkbox.checked = !!settings.enabled;
+
+      if (settings.enabled && "Notification" in window && Notification.permission === "granted") {
+        startNotifyLoop();
+      }
+
+      checkbox.addEventListener("change", async () => {
+        const checked = checkbox.checked;
+
+        if (!("Notification" in window)) {
+          alert("Les notifications ne sont pas supportées par ce navigateur.");
+          checkbox.checked = false;
+          return;
+        }
+
+        if (checked) {
+          const perm = await Notification.requestPermission();
+          if (perm !== "granted") {
+            alert("Impossible d'activer les rappels : permission refusée.");
+            checkbox.checked = false;
+            const s = loadNotifySettings();
+            s.enabled = false;
+            saveNotifySettings(s);
+            stopNotifyLoop();
+            return;
+          }
+          const s = loadNotifySettings();
+          s.enabled = true;
+          saveNotifySettings(s);
+          startNotifyLoop();
+        } else {
+          const s = loadNotifySettings();
+          s.enabled = false;
+          saveNotifySettings(s);
+          stopNotifyLoop();
+        }
+      });
+    }
+
+    /* ---------- Vue principale : onglets ---------- */
+
+    function setMainView(view) {
+      mainView = view;
+
+      document.getElementById("view-today").classList.toggle("hidden", view !== "today");
+      document.getElementById("view-calendar").classList.toggle("hidden", view !== "calendar");
+
+      document.getElementById("tab-today").classList.toggle("active", view === "today");
+      document.getElementById("tab-calendar").classList.toggle("active", view === "calendar");
+
+      if (view === "calendar") {
+        renderCalendar();
+      }
+    }
+
+    /* ---------- Calcul perf / couleur / streak ---------- */
+
+    function getStatsForDate(dateKey) {
+      const data = loadData();
+      const entry = data[dateKey];
+      if (!entry) return null;
+      const pompes = entry.pompes || 0;
+      const tractions = entry.tractions || 0;
+      const abdos = entry.abdos || 0;
+      const avgPercent =
+        ((pompes / DAILY_TARGET) + (tractions / DAILY_TARGET) + (abdos / DAILY_TARGET)) / 3;
+      return {
+        pompes,
+        tractions,
+        abdos,
+        avgPercent: Math.max(0, Math.min(1, avgPercent)),
+      };
+    }
+
+    function getPerfClass(avgPercent) {
+      if (!avgPercent || avgPercent <= 0) return "perf-white";
+      if (avgPercent < 0.5) return "perf-yellow";
+      if (avgPercent < 0.9) return "perf-orange";
+      return "perf-green";
+    }
+
+    function formatPercentLabel(avgPercent) {
+      const p = Math.round((avgPercent || 0) * 100);
+      return p + " %";
+    }
+
+    function formatDateKeyFromDate(d) {
+      const y = d.getFullYear().toString().padStart(4, "0");
+      const m = (d.getMonth() + 1).toString().padStart(2, "0");
+      const day = d.getDate().toString().padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function computeStreak() {
+      const today = new Date();
+      let streak = 0;
+      while (true) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - streak);
+        const key = formatDateKeyFromDate(d);
+        const stats = getStatsForDate(key);
+        if (!stats) break;
+        if (stats.avgPercent >= 0.9) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function goToDay(date) {
+      calendarRefDate = new Date(date);
+      setMainView("calendar");
+      setCalendarMode("day");
+    }
+
+    /* ---------- Calendrier interne ---------- */
+
+    function setCalendarMode(mode) {
+      calendarMode = mode;
+
+      ["day", "week", "month", "year"].forEach((m) => {
+        document.getElementById("mode-" + m).classList.toggle("active", m === mode);
+      });
+
+      renderCalendar();
+    }
+
+    function shiftCalendar(delta) {
+      const d = new Date(calendarRefDate);
+
+      if (calendarMode === "day") {
+        d.setDate(d.getDate() + delta);
+      } else if (calendarMode === "week") {
+        d.setDate(d.getDate() + 7 * delta);
+      } else if (calendarMode === "month") {
+        d.setMonth(d.getMonth() + delta);
+      } else if (calendarMode === "year") {
+        d.setFullYear(d.getFullYear() + delta);
+      }
+
+      calendarRefDate = d;
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      const container = document.getElementById("calendar-content");
+      const title = document.getElementById("calendar-title");
+      container.innerHTML = "";
+
+      const d = calendarRefDate;
+
+      if (calendarMode === "day") {
+        title.textContent = getTodayLabel(d) + " – vue jour";
+        renderCalendarDay(container, d);
+      } else if (calendarMode === "week") {
+        const weekLabel = d.toLocaleDateString("fr-FR", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        title.textContent = `Semaine de référence – ${weekLabel}`;
+        renderCalendarWeek(container, d);
+      } else if (calendarMode === "month") {
+        const monthLabel = d.toLocaleDateString("fr-FR", {
+          year: "numeric",
+          month: "long",
+        });
+        title.textContent = `Mois – ${monthLabel}`;
+        renderCalendarMonth(container, d);
+      } else if (calendarMode === "year") {
+        const yearLabel = d.getFullYear();
+        title.textContent = `Année – ${yearLabel}`;
+        renderCalendarYear(container, d.getFullYear());
+      }
+    }
+
+    function renderCalendarDay(container, date) {
+      const key = formatDateKeyFromDate(date);
+      const stats = getStatsForDate(key);
+      const card = document.createElement("div");
+      card.className = "calendar-day-detail";
+
+      const title = document.createElement("div");
+      title.innerHTML = `<strong>${getTodayLabel(date)}</strong>`;
+      card.appendChild(title);
+
+      if (!stats) {
+        const line = document.createElement("div");
+        line.textContent = "Aucune donnée pour ce jour.";
+        card.appendChild(line);
+      } else {
+        const perfClass = getPerfClass(stats.avgPercent);
+        const perfLine = document.createElement("div");
+        perfLine.innerHTML = `Perf globale : <span class="${perfClass} calendar-score" style="padding:2px 6px;border-radius:999px;border:1px solid #1f2937;">${formatPercentLabel(stats.avgPercent)}</span>`;
+        card.appendChild(perfLine);
+
+        const line1 = document.createElement("div");
+        line1.textContent = `Pompes : ${stats.pompes} / ${DAILY_TARGET}`;
+        const line2 = document.createElement("div");
+        line2.textContent = `Tractions : ${stats.tractions} / ${DAILY_TARGET}`;
+        const line3 = document.createElement("div");
+        line3.textContent = `Abdos : ${stats.abdos} / ${DAILY_TARGET}`;
+
+        card.appendChild(line1);
+        card.appendChild(line2);
+        card.appendChild(line3);
+      }
+
+      container.appendChild(card);
+    }
+
+    function renderCalendarWeek(container, date) {
+      const grid = document.createElement("div");
+      grid.className = "calendar-grid week";
+
+      const base = new Date(date);
+      const dayOfWeek = (base.getDay() + 6) % 7; // Lundi=0
+      base.setDate(base.getDate() - dayOfWeek);
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(base);
+        d.setDate(base.getDate() + i);
+        const key = formatDateKeyFromDate(d);
+        const stats = getStatsForDate(key);
+
+        const cell = document.createElement("div");
+        const perfClass = stats ? getPerfClass(stats.avgPercent) : "perf-white";
+        cell.className = `calendar-cell ${perfClass}`;
+
+        const label = document.createElement("div");
+        label.className = "calendar-cell-label";
+        label.textContent = d.toLocaleDateString("fr-FR", {
+          weekday: "short",
+          day: "numeric",
+        });
+
+        const score = document.createElement("div");
+        score.className = "calendar-score";
+        score.textContent = stats ? formatPercentLabel(stats.avgPercent) : "0 %";
+
+        cell.onclick = () => {
+          goToDay(d);
+        };
+
+        cell.appendChild(label);
+        cell.appendChild(score);
+        grid.appendChild(cell);
+      }
+
+      container.appendChild(grid);
+    }
+
+    function renderCalendarMonth(container, date) {
+      const grid = document.createElement("div");
+      grid.className = "calendar-grid month";
+
+      const dowNames = ["L", "M", "M", "J", "V", "S", "D"];
+      dowNames.forEach((d) => {
+        const h = document.createElement("div");
+        h.className = "dow-header";
+        h.textContent = d;
+        grid.appendChild(h);
+      });
+
+      const first = new Date(date.getFullYear(), date.getMonth(), 1);
+      const firstDow = (first.getDay() + 6) % 7; // Lundi=0
+      const start = new Date(first);
+      start.setDate(first.getDate() - firstDow);
+
+      for (let i = 0; i < 42; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const key = formatDateKeyFromDate(d);
+        const stats = getStatsForDate(key);
+
+        const cell = document.createElement("div");
+        const perfClass = stats ? getPerfClass(stats.avgPercent) : "perf-white";
+        cell.className = `calendar-cell ${perfClass}`;
+
+        const label = document.createElement("div");
+        label.className = "calendar-cell-label";
+        label.textContent = d.getDate();
+
+        const score = document.createElement("div");
+        score.className = "calendar-score";
+        score.textContent = stats ? formatPercentLabel(stats.avgPercent) : "";
+
+        if (d.getMonth() !== date.getMonth()) {
+          label.style.opacity = "0.4";
+          score.style.opacity = "0.4";
+        }
+
+        cell.onclick = () => {
+          goToDay(d);
+        };
+
+        cell.appendChild(label);
+        cell.appendChild(score);
+        grid.appendChild(cell);
+      }
+
+      container.appendChild(grid);
+    }
+
+    function renderCalendarYear(container, year) {
+      const grid = document.createElement("div");
+      grid.className = "calendar-grid-year";
+
+      for (let m = 0; m < 12; m++) {
+        const monthStart = new Date(year, m, 1);
+        const monthEnd = new Date(year, m + 1, 0);
+        let sumPercent = 0;
+        let countDays = 0;
+
+        for (let d = 1; d <= monthEnd.getDate(); d++) {
+          const cur = new Date(year, m, d);
+          const key = formatDateKeyFromDate(cur);
+          const stats = getStatsForDate(key);
+          if (stats) {
+            sumPercent += stats.avgPercent;
+            countDays++;
+          }
+        }
+
+        const avgMonth = countDays > 0 ? sumPercent / countDays : 0;
+        const perfClass = getPerfClass(avgMonth);
+
+        const cell = document.createElement("div");
+        cell.className = `calendar-cell ${perfClass}`;
+
+        const label = document.createElement("div");
+        label.className = "calendar-cell-label";
+        label.textContent = monthStart.toLocaleDateString("fr-FR", { month: "short" });
+
+        const score = document.createElement("div");
+        score.className = "calendar-score";
+        score.textContent = countDays > 0 ? formatPercentLabel(avgMonth) : "0 %";
+
+        cell.onclick = () => {
+          calendarRefDate = new Date(year, m, 1);
+          setMainView("calendar");
+          setCalendarMode("month");
+        };
+
+        cell.appendChild(label);
+        cell.appendChild(score);
+        grid.appendChild(cell);
+      }
+
+      container.appendChild(grid);
+    }
+
+    // Init
+    calendarRefDate = new Date();
+    updateDisplay();
+    initNotifyToggle();
+  </script>
+</body>
+</html>
+
