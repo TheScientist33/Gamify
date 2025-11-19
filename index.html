@@ -458,7 +458,7 @@
   <h1>Gamify</h1>
   <div class="date" id="date-label"></div>
   <div class="streak-banner" id="streak-banner">
-    Streak : <span class="streak-strong">0 jour</span> 
+    Streak : <span class="streak-strong">0 jour</span>
   </div>
 
   <div class="notify-wrapper">
@@ -496,6 +496,300 @@
           <div class="circle" id="pompes-circle">
             <div class="circle-inner">
               <div class="circle-value" id="pompes-count">0 / 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-minus" onclick="changeCounter('pompes', -1)">-1</button>
+          <button class="btn-plus" onclick="changeCounter('pompes', 1)">+1</button>
+          <button class="btn-plus" onclick="changeCounter('pompes', 5)">+5</button>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-reset" onclick="resetCounter('pompes')">Reset pompes</button>
+        </div>
+      </div>
+
+      <!-- Tractions -->
+      <div class="card">
+        <div class="card-title">
+          <span>Tractions</span>
+          <span class="card-subtitle">Objectif 100</span>
+        </div>
+        <div class="circle-wrapper">
+          <div class="circle" id="tractions-circle">
+            <div class="circle-inner">
+              <div class="circle-value" id="tractions-count">0 / 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-minus" onclick="changeCounter('tractions', -1)">-1</button>
+          <button class="btn-plus" onclick="changeCounter('tractions', 1)">+1</button>
+          <button class="btn-plus" onclick="changeCounter('tractions', 5)">+5</button>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-reset" onclick="resetCounter('tractions')">Reset tractions</button>
+        </div>
+      </div>
+
+      <!-- Abdos -->
+      <div class="card">
+        <div class="card-title">
+          <span>Abdos</span>
+          <span class="card-subtitle">Objectif 100</span>
+        </div>
+        <div class="circle-wrapper">
+          <div class="circle" id="abdos-circle">
+            <div class="circle-inner">
+              <div class="circle-value" id="abdos-count">0 / 100</div>
+            </div>
+          </div>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-minus" onclick="changeCounter('abdos', -1)">-1</button>
+          <button class="btn-plus" onclick="changeCounter('abdos', 1)">+1</button>
+          <button class="btn-plus" onclick="changeCounter('abdos', 5)">+5</button>
+        </div>
+        <div class="buttons-row">
+          <button class="btn-reset" onclick="resetCounter('abdos')">Reset abdos</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-day">
+      <button class="btn-reset" onclick="resetToday()">Reset de la journée</button>
+      <button class="btn-primary" onclick="exportToCalendar()">Ajouter au calendrier</button>
+    </div>
+  </div>
+
+  <!-- Vue calendrier -->
+  <div id="view-calendar" class="hidden">
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <div class="calendar-title" id="calendar-title">Calendrier</div>
+        <div class="calendar-nav">
+          <button onclick="shiftCalendar(-1)">&lt;</button>
+          <button onclick="shiftCalendar(1)">&gt;</button>
+        </div>
+      </div>
+
+      <div class="calendar-modes">
+        <button id="mode-day" class="active" onclick="setCalendarMode('day')">Jour</button>
+        <button id="mode-week" onclick="setCalendarMode('week')">Semaine</button>
+        <button id="mode-month" onclick="setCalendarMode('month')">Mois</button>
+        <button id="mode-year" onclick="setCalendarMode('year')">Année</button>
+      </div>
+
+      <div id="calendar-content"></div>
+
+      <div class="legend">
+        <span>Légende :</span>
+        <span class="legend-item">
+          <span class="legend-color legend-white"></span> 0 %
+        </span>
+        <span class="legend-item">
+          <span class="legend-color legend-yellow"></span> 1–49 %
+        </span>
+        <span class="legend-item">
+          <span class="legend-color legend-orange"></span> 50–89 %
+        </span>
+        <span class="legend-item">
+          <span class="legend-color legend-green"></span> ≥ 90 %
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Les données sont stockées uniquement sur ton appareil (localStorage).
+  </div>
+
+  <script>
+    const STORAGE_KEY = "push_pull_counters";
+    const DAILY_TARGET = 100;
+    const NOTIFY_KEY = "push_pull_notify";
+
+    let mainView = "today";
+    let calendarMode = "day";
+    let calendarRefDate = new Date();
+    let audioCtx = null;
+    let notifyTimer = null;
+
+    function getTodayKey() {
+      const now = new Date();
+      return now.toISOString().slice(0, 10); // "YYYY-MM-DD"
+    }
+
+    function getTodayLabel(dateOverride) {
+      const d = dateOverride || new Date();
+      return d.toLocaleDateString("fr-FR", {
+        weekday: "long",
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    }
+
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return {};
+        return JSON.parse(raw);
+      } catch (e) {
+        console.error("Erreur de parsing localStorage", e);
+        return {};
+      }
+    }
+
+    function saveData(data) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function ensureToday(data) {
+      const key = getTodayKey();
+      if (!data[key]) {
+        data[key] = { pompes: 0, tractions: 0, abdos: 0, log: [] };
+      } else {
+        if (data[key].pompes == null) data[key].pompes = 0;
+        if (data[key].tractions == null) data[key].tractions = 0;
+        if (data[key].abdos == null) data[key].abdos = 0;
+        if (!Array.isArray(data[key].log)) data[key].log = [];
+      }
+      return key;
+    }
+
+    function updateCircle(type, value) {
+      const val = value || 0;
+      const el = document.getElementById(type + "-count");
+      const circle = document.getElementById(type + "-circle");
+      if (!el || !circle) return;
+
+      el.textContent = `${val} / ${DAILY_TARGET}`;
+      const clamped = Math.max(0, Math.min(DAILY_TARGET, val));
+      const percent = clamped / DAILY_TARGET;
+      const deg = percent * 360;
+
+      circle.style.background = `conic-gradient(#22c55e ${deg}deg, #1f2937 0deg)`;
+    }
+
+    function computeStreak() {
+      const today = new Date();
+      let streak = 0;
+      while (true) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - streak);
+        const key = formatDateKeyFromDate(d);
+        const stats = getStatsForDate(key);
+        if (!stats) break;
+        if (stats.avgPercent >= 0.9) {
+          streak++;
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function updateStreakBanner() {
+      const banner = document.getElementById("streak-banner");
+      const streak = computeStreak();
+      const label = streak <= 1 ? "jour" : "jours";
+      banner.innerHTML = `Streak actuel : <span class="streak-strong">${streak} ${label}</span>`;
+    }
+
+    function getStatsForDate(dateKey) {
+      const data = loadData();
+      const entry = data[dateKey];
+      if (!entry) return null;
+      const pompes = entry.pompes || 0;
+      const tractions = entry.tractions || 0;
+      const abdos = entry.abdos || 0;
+      const avgPercent =
+        ((pompes / DAILY_TARGET) + (tractions / DAILY_TARGET) + (abdos / DAILY_TARGET)) / 3;
+      return {
+        pompes,
+        tractions,
+        abdos,
+        avgPercent: Math.max(0, Math.min(1, avgPercent)),
+      };
+    }
+
+    function getPerfClass(avgPercent) {
+      if (!avgPercent || avgPercent <= 0) return "perf-white";
+      if (avgPercent < 0.5) return "perf-yellow";
+      if (avgPercent < 0.9) return "perf-orange";
+      return "perf-green";
+    }
+
+    function formatPercentLabel(avgPercent) {
+      const p = Math.round((avgPercent || 0) * 100);
+      return p + " %";
+    }
+
+    function formatDateKeyFromDate(d) {
+      const y = d.getFullYear().toString().padStart(4, "0");
+      const m = (d.getMonth() + 1).toString().padStart(2, "0");
+      const day = d.getDate().toString().padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function updatePerfDayBanner() {
+      const percentEl = document.getElementById("perfday-percent");
+      const msgEl = document.getElementById("perfday-message");
+      const todayKey = getTodayKey();
+      const stats = getStatsForDate(todayKey);
+
+      let p = 0;
+      if (stats) {
+        p = Math.round(stats.avgPercent * 100);
+      }
+      percentEl.textContent = p + " %";
+
+      let message = "";
+
+      if (!stats || (stats.pompes === 0 && stats.tractions === 0 && stats.abdos === 0)) {
+        message = "La journée n'a pas commencé. 5 pompes pour lancer la machine ?";
+      } else if (p < 30) {
+        message = "Tu as posé un pied, mais tu es encore dans la zone tranquille. Un petit bloc 10 pompes / 5 tractions ?";
+      } else if (p < 60) {
+        message = "Bien joué, le moteur est allumé. Pousse un cran de plus pour sortir du jaune.";
+      } else if (p < 90) {
+        message = "Tu es dans l’orange : tu as déjà fait le plus dur. Encore une ou deux séries et tu passes au vert.";
+      } else if (p < 120) {
+        message = "Objectif du jour quasiment validé. Finis ton 100/100/100 et consolide ton streak.";
+      } else {
+        message = "Tu es au-dessus des 100 %. Mode surperformance. Garde ce niveau, ça devient ta nouvelle base.";
+      }
+
+      msgEl.textContent = message;
+    }
+
+    function updateDisplay() {
+      const data = loadData();
+      const todayKey = ensureToday(data);
+      const today = data[todayKey];
+
+      updateCircle("pompes", today.pompes);
+      updateCircle("tractions", today.tractions);
+      updateCircle("abdos", today.abdos);
+
+      document.getElementById("date-label").textContent = getTodayLabel();
+      updateStreakBanner();
+      updatePerfDayBanner();
+      renderCalendar();
+    }
+
+    function logAction(today, type, appliedDelta, newValue, options = {}) {
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString("fr-FR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      });
+
+      today.log.push({
+        time: now.toISOString(),
+    count">0 / 100</div>
             </div>
           </div>
         </div>
